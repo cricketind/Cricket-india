@@ -18,7 +18,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  flutter:
   assets:
+    - assets/logo.png
     - assets/hit.mp3
     - assets/cheer.mp3
-    - assets/logo.png
