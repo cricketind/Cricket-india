@@ -1,0 +1,150 @@
+import 'package:flutter/material.dart';
+import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
+
+void main() {
+  runApp(CricketIndiaApp());
+}
+
+class CricketIndiaApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Cricket India',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.green),
+      home: MainMenu(),
+    );
+  }
+}
+
+class MainMenu extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.green.shade50,
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => GameScreen()));
+          },
+          child: Text('Play Cricket India'),
+        ),
+      ),
+    );
+  }
+}
+
+class GameScreen extends StatefulWidget {
+  @override
+  _GameScreenState createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
+  double ballY = -1;
+  double ballSpeed = 0.01;
+  int score = 0;
+  bool gameOver = false;
+  late AnimationController controller;
+  late AudioPlayer hitSound;
+  late AudioPlayer crowdSound;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = AnimationController(
+      duration: Duration(minutes: 5),
+      vsync: this,
+    )..addListener(updateBall);
+    controller.repeat();
+    hitSound = AudioPlayer();
+    crowdSound = AudioPlayer();
+  }
+
+  void updateBall() {
+    if (!gameOver) {
+      setState(() {
+        ballY += ballSpeed;
+        if (ballY > 1) {
+          gameOver = true;
+          controller.stop();
+        }
+      });
+    }
+  }
+
+  void swipeAction(String direction) {
+    if (!gameOver) {
+      if (ballY > 0.7 && ballY < 1.0) {
+        setState(() {
+          score += Random().nextInt(6) + 1;
+          ballY = -1;
+          ballSpeed += 0.002; // Make game faster
+        });
+        hitSound.play(AssetSource('hit.mp3'));
+        crowdSound.play(AssetSource('cheer.mp3'));
+      } else {
+        setState(() {
+          gameOver = true;
+          controller.stop();
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    hitSound.dispose();
+    crowdSound.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.green.shade100,
+      body: GestureDetector(
+        onVerticalDragUpdate: (details) {
+          if (details.primaryDelta! < -10) swipeAction("up");
+          if (details.primaryDelta! > 10) swipeAction("down");
+        },
+        onHorizontalDragUpdate: (details) {
+          if (details.primaryDelta! < -10) swipeAction("left");
+          if (details.primaryDelta! > 10) swipeAction("right");
+        },
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment(0, ballY),
+              child: Icon(Icons.sports_cricket, size: 50, color: Colors.brown),
+            ),
+            if (gameOver)
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Game Over', style: TextStyle(fontSize: 30, color: Colors.red)),
+                    SizedBox(height: 20),
+                    Text('Your Score: $score', style: TextStyle(fontSize: 24)),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainMenu()));
+                      },
+                      child: Text('Play Again'),
+                    ),
+                  ],
+                ),
+              ),
+            Positioned(
+              top: 50,
+              left: 20,
+              child: Text('Score: $score', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
