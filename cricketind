@@ -1,0 +1,6 @@
+cd path/to/your/cricket_game_project
+git init
+git remote add origin https://github.com/YOUR_USERNAME/cricket-india-game.git
+git add .
+git commit -m "First Commit - Cricket India Game"
+git push -u origin master
